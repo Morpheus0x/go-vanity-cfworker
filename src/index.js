@@ -134,7 +134,7 @@ async function handleRequest(request) {
     <meta http-equiv="refresh" content="3; url=${pkgURL}" />
   </head>
   <body>
-    Nothing to see here! <a href="${pkgURL}">Move along</a>
+    Redirecting... <a href="${pkgURL}">${pkgURL}</a>
   </body>
 </html>`;
 
