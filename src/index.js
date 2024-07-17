@@ -87,24 +87,37 @@ function getPackageURL(pkg) {
  * @param {Request} request The incoming HTTP request.
  */
 async function handleRequest(request) {
-  // repo name = hostname + first part of path
+  // define error response here for later use
+  const errorResponse = new Response('404 NOT FOUND', {
+    headers: { 'Content-Type': 'text/plain' },
+    status: 404,
+    statusText: 'NotFound',
+  });
+
+  // get request path
   const url = new URL(request.url);
-  let repoSlashPos = url.pathname.indexOf('/', 1);
-  let repoName = '';
-  if (repoSlashPos == -1) {
-    repoName = `${url.hostname}${url.pathname}`;
-  } else {
-    repoName = `${url.hostname}${url.pathname.substring(0, repoSlashPos)}`;
+  let splitPath = url.pathname.split('/');
+  if (splitPath.length < 2 || (splitPath.length >= 2 && splitPath[1] == '')) {
+    return errorResponse;
   }
 
-  // get the package
-  const pkg = await getValue(repoName);
+  // get the package, this supports a two-part package name, e.g. /user/package
+  // it matches on shortest path possible to preserve using subpath for go module package import
+  // the limitation is that no package may exist that is named like a user
+  let repoName = `${url.hostname}/${splitPath[1]}`;
+  let pkg = await getValue(repoName);
   if (pkg === null) {
-    return new Response('404 NOT FOUND', {
-      headers: { 'Content-Type': 'text/plain' },
-      status: 404,
-      statusText: 'NotFound',
-    });
+    if (
+      splitPath.length < 3 ||
+      (splitPath.length >= 3 && (splitPath[1] == '' || splitPath[2] == ''))
+    ) {
+      return errorResponse;
+    }
+    repoName = `${url.hostname}/${splitPath[1]}/${splitPath[2]}`;
+    pkg = await getValue(repoName);
+    if (pkg === null) {
+      return errorResponse;
+    }
   }
 
   // grab the package information and craft the HTML response
