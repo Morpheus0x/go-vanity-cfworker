@@ -89,7 +89,8 @@ function getPackageURL(pkg) {
 async function handleRequest(request) {
   // repo name = hostname + first part of path
   const url = new URL(request.url);
-  repoSlashPos = url.pathname.indexOf('/', 1);
+  let repoSlashPos = url.pathname.indexOf('/', 1);
+  let repoName = '';
   if (repoSlashPos == -1) {
     repoName = `${url.hostname}${url.pathname}`;
   } else {
@@ -100,11 +101,9 @@ async function handleRequest(request) {
   const pkg = await getValue(repoName);
   if (pkg === null) {
     return new Response('404 NOT FOUND', {
-      init: {
-        headers: { 'Content-Type': 'text/plain' },
-        status: 404,
-        statusText: 'NotFound',
-      },
+      headers: { 'Content-Type': 'text/plain' },
+      status: 404,
+      statusText: 'NotFound',
     });
   }
 
@@ -128,10 +127,8 @@ async function handleRequest(request) {
 
   // return the formatted HTML response with meta tags
   return new Response(html, {
-    init: {
-      headers: { 'Content-Type': 'text/html' },
-      status: 200,
-      statusText: 'OK',
-    },
+    headers: { 'Content-Type': 'text/html' },
+    status: 200,
+    statusText: 'OK',
   });
 }
